@@ -114,20 +114,23 @@ def introduce():
 9. 建议食用方式: 一边挂着刷钱一边看番, 出问题了自己手动调一下
 10. 写给游戏开发者: 你这拼图机制aoe无差别攻击,我都提肝帝们气愤""")
     b = input("输入任意键继续...")
-    a = int(input(">> 输入命令:\n1. 查看推荐布局(应天府十九井)\n2. 查看推荐布局(苏州府卅九井)\n请输入:"))
+    a = int(input(">> 输入命令:\n1. 查看推荐布局(应天府十九井)\n2. 查看推荐布局(苏州府卅九井)\n(没有最高效率是为了保证稳定运行)\n请输入:"))
     if a==1:
         print('''应天府十九井\nO O O O O\nO X O X O\nO X ■ O O\nO O X O X\nO O O O O''')
     elif a==2:
-        print("""O O O O O O O\nO X O O O X O\nO O X X O O O\nO O X ■ X O O \nO O O X O O O\nO X O O O X O\nO O O O O O O""")
+        print("""苏州府卅九井\nO O O O O O O\nO X O O O X O\nO O X X O O O\nO O X ■ X O O \nO O O X O O O\nO X O O O X O\nO O O O O O O""")
     else:
         print('皮?')
         return
 
 
 def changeArg():
-    global total
+    global total,buildingType,waitingTime
     total = int(input('请输入建筑总数:'))
+    buildingType = input('请输入建筑名称:')
     print('[已更新]\t总计'+str(total)+'座'+buildingType)
+    waitingTime = int(input('请输入单次生产时长(单位秒):'))
+    print('[已更新]\t一次需要'+str(waitingTime)+'秒(约'+str(waitingTime/60)[0:4]+'分钟)')
 
 
 def initPos():
@@ -137,20 +140,20 @@ def initPos():
     f.close()
     # 写入数据
     f = open('./Data.txt', 'a')
-    print('请将鼠标移动至生产类型(如普通水,上品水)位置后按下"Ctrl+Alt"')
+    print('请将鼠标移动至生产类型(如普通水,上品水)位置后按下'+GetPosKey)
     if keyboard.wait('ctrl+alt') != 0:
         x, y = pyautogui.position()
         writeStr = str(x).rjust(4)+'\t生产类型\t'+str(y).rjust(4) + '\n'
         f.write(writeStr)
         print('数据已捕获')
-    print('请将鼠标移动至安全区位置后按下"Ctrl+Alt"')
+    print('请将鼠标移动至安全区位置后按下'+GetPosKey)
     if keyboard.wait('ctrl+alt') != 0:
         x, y = pyautogui.position()
         writeStr = str(x).rjust(4) + '\t安全区\t' + str(y).rjust(4) + '\n'
         f.write(writeStr)
         print('数据已捕获')
     for i in range(total):
-        print('请将鼠标移动至建筑位置后按下"Ctrl+Alt",重复' + str(total-i) + '次')
+        print('请将鼠标移动至建筑位置后按下'+GetPosKey+',重复' + str(total-i) + '次')
         if keyboard.wait('ctrl+alt') != 0:
             x, y = pyautogui.position()
             writeStr = str(x).rjust(4) + '\t'+buildingType+'\t' + str(y).rjust(4) + '\n'
@@ -207,6 +210,7 @@ def initBuilding():
         return
     print("脚本加载完毕,开始执行\n")
 
+
 def real_beginScript():
     print("*********开始挂机*********")
     global myBuilding
@@ -225,29 +229,6 @@ def real_beginScript():
         time.sleep(20)
         produce_times += 1
 
-
-#     print('请将鼠标移动至"普通水"位置后按下"Ctrl+Alt",重复'+str(1)+'次')
-#     if keyboard.wait('ctrl+alt') != 0:
-#         x_lv, y_lv = pyautogui.position()
-#     print('普通水坐标:x=' + str(x_lv) + ',y=' + str(y_lv))
-# print('请将鼠标移动至水井中心十字位置后按下"Ctrl+Alt",重复'+str(20)+'次')
-# myWell = []
-# for i in range(18):
-#     myWell.append(Well())
-#     myWell[i].set_pos(i)
-#
-#
-# print("*********开始挂机*********")
-# while(True):
-#     print('***********生产中***********')
-#     check()
-#     for i in range(18):
-#         myWell[i].produce_start(x_lv[0+50*(random.random()-0.5), y_lv[0+50*(random.random()-0.5),i)
-#     print('***********等待中***********')
-#     time.sleep(200+random.random()*15)
-#     print('***********收割中***********')
-    # for i in range(20):
-    #     myWell[i].produce_end(i)
 
 if __name__ == '__main__':
     print("*****江南百井图刷金币脚本*****")
