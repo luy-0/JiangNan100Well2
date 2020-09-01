@@ -3,6 +3,9 @@ import keyboard
 import time
 import random
 
+import flow_ctrl as flow
+import data_ctrl as data
+
 '''
 写在前面
 
@@ -21,17 +24,20 @@ import random
 
 
 
-GetPosKey = 'ctrl+alt'          # 选点快捷键
-x_lv = y_lv = 0                 # 生产类型坐标,选在普通水处
-x_safe = y_safe = 0             # 安全区坐标,建议选在屏幕四周的河流中
-total = 19                      # 建筑总数目
-buildingType = '水井'
-waitingTime = 180               # 生产1份需要的时间
+GetPosKey = 'ctrl+alt'                          # 选点快捷键
+total = data.total                              # 建筑总数目
+is_tax_station_work = data.is_tax_station_work  # 税课司工作否
+buildingType = data.buildingType                # 生产类型(名称)
+pro_type_level = data.pro_type_level            # 生产等级
+pro_manager = data.pro_manager                  # 生产者
+waitingTime = data.waitingTime                  # 生产1份需要的时间
 myBuilding = []
 
+
 class Building:
-    def __init__(self,index):
-        self.x = self.y = self.level = 0
+    def __init__(self, index):
+        self.x = self.y = 0
+        self.level = pro_type_level
         self.index = index
         self.name = buildingType
 
@@ -40,46 +46,56 @@ class Building:
         self.y = y
         print(str(self.index) + '号'+self.name+'中心坐标:x=' + str(self.x) + ',y=' + str(self.y))
 
-    def produce_start(self):
-        x1 = self.x + (random.random()-0.5) * 1
-        y1 = self.y + (random.random()-0.5) * 1
-        level = self.level
-        x2 = x_lv + (random.random()-0.5) * 1
-        y2 = y_lv + (random.random()-0.5) * 1
-        sleeptime = 0.5 + random.random() * 0.3
+    def click_pro_type(self):
+        flow.short_sleep(0.2)
+        flow.click(data.pro_type[self.level][0], data.pro_type[self.level][1])
+        flow.short_sleep(0.8)
 
-        check()
-        pyautogui.click(x1,y1)
-        time.sleep(sleeptime)
+    def click_pro_manager(self):
+        flow.click(data.pro_manager_pos[pro_manager][0], data.pro_manager_pos[pro_manager][1])
 
-        check()
-        pyautogui.doubleClick(x=x2, y=y2, interval=sleeptime)
-        time.sleep(sleeptime)
-        click_safety_area()
-        print(str(self.index)+ '号'+self.name+"开始生产,等级:"+str(level))
+    def produce_once(self):
+        flow.click_safe()
+        flow.click(self.x, self.y)
+        self.click_pro_type()
+        self.click_pro_manager()
+        flow.click_safe()
+        flow.drag_safe()
 
+    def produce_end(self):
+        flow.click_safe()
+        flow.click(self.x, self.y)
+        flow.click_safe()
 
-def click_safety_area():
-    pyautogui.click(x_safe + random.random() * 2, y_safe - random.random() * 2)
-    time.sleep(0.1 + random.random() * 0.3)
-    pyautogui.click(x_safe + random.random() * 2, y_safe - random.random() * 2)
-    time.sleep(0.1 + random.random() * 0.3)
-    pyautogui.click(x_safe + random.random() * 2, y_safe - random.random() * 2)
-    time.sleep(0.1 + random.random() * 0.3)
-    pyautogui.click(x_safe + random.random() * 2, y_safe - random.random() * 2)
-    time.sleep(0.1 + random.random() * 0.3)
+    # def produce_start(self):
+    #     x1 = self.x + (random.random()-0.5) * 1
+    #     y1 = self.y + (random.random()-0.5) * 1
+    #     level = self.level
+    #     x2 = x_lv + (random.random()-0.5) * 1
+    #     y2 = y_lv + (random.random()-0.5) * 1
+    #     sleeptime = 0.5 + random.random() * 0.3
+    #
+    #     flow.check()
+    #     pyautogui.click(x1,y1)
+    #     time.sleep(sleeptime)
+    #
+    #     flow.check()
+    #     pyautogui.doubleClick(x=x2, y=y2, interval=sleeptime)
+    #     time.sleep(sleeptime)
+    #     flow.click_safe()
+        # self.print_begin_pro()
 
-def check():
-    if keyboard.is_pressed('esc'):
-        input('等待中,输入任意字符恢复执行')
-        input('确认恢复?输入任意字符恢复执行')
-
+    # def print_begin_pro(self):
+    #     print(str(self.index) + '号' + self.name + "开始生产,等级:" + str(self.level))
+    #
+    # def print_end_pro(self):
+    #     print(str(self.index) + '号' + self.name + "结束生产,等级:" + str(self.level))
 
 
 
 def init():
     method = int(input('\n>>输入命令:\n0:插件介绍\n1:修改参数\n'
-                   '2:初始化坐标\n3:开始挂机\n9:退出程序\n请输入:'))
+                   '2:初始化坐标\n3.初始化视角(画室)\n4:开始挂机\n9:退出程序\n请输入:'))
     if method == 0:
         introduce()
         return 1
@@ -90,47 +106,42 @@ def init():
         initPos()
         return 1
     elif method == 3:
+        flow.goto_painting_room()
+        return 1
+    elif method == 4:
         beginScript()
         return 1
     elif method == 9:
         return 0
+    elif method == 666:
+        flow.check_hwnd()
+        flow.goto_painting_room()
+        beginScript()
     else:
         print('皮?')
         return 1
 
 
 def introduce():
-    print("""\n本脚本是手机游戏江南百景图的辅助脚本.开发仅供个人学习使用.禁止其他人的任何不正当行为,所引起的纠纷本人概不负责.
-## 如何使用?
-0.  本脚本需要一定python基础
-1. 请配合电脑端的安卓模拟器使用
-2. 在代码最开始设置相关参数 
-3. 初次使用需要手动选点
-4. 长按ESC键可中止下一次点击
-5. 请打开收税的
-6. 尽量不要把水井种在神像后面,挡视野很难命中
-7. 无法解决v1.2.6的拼图小游戏
-8. 实际使用中会出很多问题,我也懒得更新,凑合着玩吧
-9. 建议食用方式: 一边挂着刷钱一边看番, 出问题了自己手动调一下
-10. 写给游戏开发者: 你这拼图机制aoe无差别攻击,我都提肝帝们气愤""")
-    b = input("输入任意键继续...")
-    a = int(input(">> 输入命令:\n1. 查看推荐布局(应天府十九井)\n2. 查看推荐布局(苏州府卅九井)\n(没有最高效率是为了保证稳定运行)\n请输入:"))
-    if a==1:
-        print('''应天府十九井\nO O O O O\nO X O X O\nO X ■ O O\nO O X O X\nO O O O O''')
-    elif a==2:
-        print("""苏州府卅九井\nO O O O O O O\nO X O O O X O\nO O X X O O O\nO O X ■ X O O \nO O O X O O O\nO X O O O X O\nO O O O O O O""")
-    else:
-        print('皮?')
-        return
+    print("本脚本仅供个人学习代码使用.请勿用于实际游戏!!\n"
+          "请配合电脑端的安卓模拟器(推荐使用逍遥)\n"
+          "无法解决拼图小游戏, 但是已经尽可能地规避了\n"
+          "如果你只能刷一轮是正常的.请自己阅读源代码并修改\n"
+          "长按ESC或将鼠标移动至屏幕四角可以强行阻止下一次点击\n"
+          )
+    b = input("输入任意键返回")
+    return
 
 
 def changeArg():
-    global total,buildingType,waitingTime
+    global total, buildingType, waitingTime, is_tax_station_work, pro_manager, pro_type_level
     total = int(input('请输入建筑总数:'))
     buildingType = input('请输入建筑名称:')
-    print('[已更新]\t总计'+str(total)+'座'+buildingType)
-    waitingTime = int(input('请输入单次生产时长(单位秒):'))
-    print('[已更新]\t一次需要'+str(waitingTime)+'秒(约'+str(waitingTime/60)[0:4]+'分钟)')
+    waitingTime = int(input('请输入单次生产时长(分钟):'))
+    pro_type_level = int(input("请输入生产等级(1/2/3/4):")) - 1
+    is_tax_station_work = bool(input("税课司是否工作?工作输入1,反之输入0:"))
+    pro_manager = int(input("是否派遣特殊居民?派遣输入1,反之输入0:"))
+
 
 
 def initPos():
@@ -140,18 +151,6 @@ def initPos():
     f.close()
     # 写入数据
     f = open('./Data.txt', 'a')
-    print('请将鼠标移动至生产类型(如普通水,上品水)位置后按下'+GetPosKey)
-    if keyboard.wait('ctrl+alt') != 0:
-        x, y = pyautogui.position()
-        writeStr = str(x).rjust(4)+'\t生产类型\t'+str(y).rjust(4) + '\n'
-        f.write(writeStr)
-        print('数据已捕获')
-    print('请将鼠标移动至安全区位置后按下'+GetPosKey)
-    if keyboard.wait('ctrl+alt') != 0:
-        x, y = pyautogui.position()
-        writeStr = str(x).rjust(4) + '\t安全区\t' + str(y).rjust(4) + '\n'
-        f.write(writeStr)
-        print('数据已捕获')
     for i in range(total):
         print('请将鼠标移动至建筑位置后按下'+GetPosKey+',重复' + str(total-i) + '次')
         if keyboard.wait('ctrl+alt') != 0:
@@ -169,29 +168,12 @@ def beginScript():
 
 
 def initBuilding():
-    global myBuilding, x_lv, y_lv, x_safe, y_safe
-    isBadData = 0
+    global myBuilding
     myBuilding = []
     f = open('./Data.txt', 'r')
-    # 读取生产类型坐标
-    line_str = f.readline()
-    if (line_str == ''):
-        isBadData = 1
-    else:
-        x_lv = int(line_str[0:4])
-        y_lv = int(line_str[-4:-1])
-    # 读取安全区
-    line_str = f.readline()
-    if (line_str == ''):
-        isBadData = 1
-    else:
-        x_safe = int(line_str[0:4])
-        y_safe = int(line_str[-4:-1])
-    # 读取建筑坐标
     numlines = 0
     while (True):
         line_str = f.readline()
-        # print(line_str)
         if (line_str == ''):
             break
         else:
@@ -202,36 +184,45 @@ def initBuilding():
             myBuilding[numlines].set_pos(x,y)
             numlines += 1
     f.close()
-    # 检查坏数
-    if numlines != total:
-        isBadData = 1
-    if isBadData==1:
-        print("⚠Data文件损坏,请重新初始化坐标⚠\n")
-        return
     print("脚本加载完毕,开始执行\n")
 
 
 def real_beginScript():
-    print("*********开始挂机*********")
+    print("****开始挂机****")
     global myBuilding
     produce_times = 1
+    flow.window_max()
+    flow.click_safe()
     while(True):
-        click_safety_area()
-        print('> 开始第'+str(produce_times)+'轮生产')
-        check()
+        flow.window_max()
+        flow.click_safe()
+        print('> 开始第'+str(produce_times)+'轮生产\n本次生产等级为'+str(pro_type_level+1))
+        if(pro_manager):
+            print("使用角色生产")
+        else:
+            print("不使用角色生产")
+        flow.check()
+
         for i in range(total):
-            myBuilding[i].produce_start()
-        print('> 等待成熟')
-        time.sleep(waitingTime-total*1.5+random.random()*15)
+            myBuilding[i].produce_once()
+
+        if (produce_times%10) == 0:
+            flow.map_y2y()
+            flow.goto_painting_room()
+
+        flow.wait_pro_over()
+
+        if is_tax_station_work != 1:
+            for i in range(total-1, -1, -1):
+                myBuilding[i].produce_end()
+
         print('> 第'+str(produce_times)+'轮生产完毕')
-        click_safety_area()
-        print('> 20秒后开始下一轮')
-        time.sleep(20)
+        flow.click_safe()
         produce_times += 1
 
 
 if __name__ == '__main__':
-    print("*****江南百井图刷金币脚本*****")
+    print("***江南百井图刷金币脚本***")
     Flag = True
     while(Flag):
         Flag=init()
