@@ -1,4 +1,4 @@
-import dev_test as dev
+
 
 # 常量
 total = 16                      # 建筑总数
@@ -17,7 +17,7 @@ ground_sill_xy = [508, 480]     # 地基
 map_choice_xy = [280, 475]      # 地图选项
 city_1_in_map_xy = [631, 680]   # 应天府在地图上的坐标(未移动过)
 city_2_in_map_xy = [1445, 900]  # 苏州府在地图上的坐标(移动过)
-is_tax_station_work = True  # 税课司工作否 工作1 休息0
+is_tax_station_work = False  # 税课司工作否 工作1 休息0
 book_xy = [1148, 465]
 
 # 0级生产选项
@@ -46,4 +46,4 @@ pro_manager_pos = [[765, 260], [1305, 270]]
 
 
 if __name__ == '__main__':
-    dev.test_import()
+    pass
